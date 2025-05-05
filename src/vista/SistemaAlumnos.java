@@ -9,6 +9,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.ArrayList;
 
 //el .getRow = devuelve el número de fila actual de un conjunto de resultados (es por eso del ResultSetTableModel)
 
@@ -39,6 +41,15 @@ public class SistemaAlumnos extends JFrame {
     private JComboBox<String> comboSemestreConsulta, comboCarreraConsulta;
     private DefaultTableModel tableModelConsultas;
     private JTable tablaConsultas;
+    private JPanel panelConsultas, navegacionPanelConsultas;
+    private int indiceActual = 0;
+    private List<Alumno> listaConsultaResultados;
+    private JTextField txtIndice;
+    private JButton btnPrimero, btnAnterior, btnSiguiente, btnUltimo;
+    private JButton btnBuscar;
+    private JSpinner spinnerSemestreConsultaCampo;
+
+    private AlumnoDAO alumnoDAO;
 
     //Metodos propis
     public void actualizarTabla(JTable tabla){
@@ -58,6 +69,11 @@ public class SistemaAlumnos extends JFrame {
 
     //constructor
     public SistemaAlumnos() {
+
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+        alumnoDAO = new AlumnoDAO();
+
         setTitle("Sistema de Gestión de Alumnos (Altas, Bajas, Cambios y Consultas) ");
         setSize(500, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -94,23 +110,22 @@ public class SistemaAlumnos extends JFrame {
         JPanel altasPanel = crearPanelAltas();
         JPanel bajasPanel = crearPanelBajas();
         JPanel cambiosPanel = crearPanelCambios();
-        JPanel consultasPanel = crearPanelConsultas();
+        panelConsultas = crearPanelConsultas();
 
         // agregar los paneles al CardLayout
         mainPanel.add(menuPanel, "Menu");
         mainPanel.add(altasPanel, "Altas");
         mainPanel.add(bajasPanel, "Bajas");
         mainPanel.add(cambiosPanel, "Cambios");
-        mainPanel.add(consultasPanel, "Consultas");
+        mainPanel.add(panelConsultas, "Consultas");
 
         // agregar el panel principal a la ventana
-        add(mainPanel);
+        getContentPane().add(mainPanel);
 
         // agregar los ActionListener
         itemMenuPrincipal.addActionListener(e -> cardLayout.show(mainPanel, "Menu"));
 
         itemAltas.addActionListener(e -> {
-            AlumnoDAO alumnoDAO = new AlumnoDAO();
             java.util.ArrayList<Alumno> alumnos = alumnoDAO.mostrarAlumnos(null);
             tableModelAltas.setRowCount(0); // Limpiar la tabla pa que no se dupliquen
             for (Alumno alumno : alumnos) {
@@ -635,10 +650,8 @@ public class SistemaAlumnos extends JFrame {
     }//crearPanelCambios
 
     //==================================================================================================================================================================================================================================
-
-    // consultas
     private JPanel crearPanelConsultas() {
-        JPanel panel = new JPanel(new BorderLayout());
+        panelConsultas = new JPanel(new BorderLayout());
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -707,18 +720,18 @@ public class SistemaAlumnos extends JFrame {
         gbc.gridy = 8;
         formPanel.add(rbCarrera, gbc);
 
-        JTextField txtNumControlConsulta = new JTextField(15);
-        JTextField txtNombreConsulta = new JTextField(15);
-        JTextField txtApPaternoConsulta = new JTextField(15);
-        JTextField txtApMaternoConsulta = new JTextField(15);
-        JSpinner spinnerSemestreConsulta = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+        txtNumeroControlConsulta = new JTextField(15);
+        txtNombreConsulta = new JTextField(15);
+        txtPrimerApellidoConsulta = new JTextField(15);
+        txtSegundoApellidoConsulta = new JTextField(15);
+        spinnerSemestreConsultaCampo = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
         String[] carrerasConsulta = {"Elige Carrera...", "Ingeniería en Sistemas Computacionales", "Ingeniería Mecatrónica", "Administración", "Contabilidad", "Ingeniería en Industrias Alimentarias"};
-        JComboBox<String> comboCarreraConsulta = new JComboBox<>(carrerasConsulta);
+        comboCarreraConsulta = new JComboBox<>(carrerasConsulta);
         comboCarreraConsulta.setEnabled(false);
 
         gbc.gridx = 1;
         gbc.gridy = 3;
-        formPanel.add(txtNumControlConsulta, gbc);
+        formPanel.add(txtNumeroControlConsulta, gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 4;
@@ -726,34 +739,35 @@ public class SistemaAlumnos extends JFrame {
 
         gbc.gridx = 1;
         gbc.gridy = 5;
-        formPanel.add(txtApPaternoConsulta, gbc);
+        formPanel.add(txtPrimerApellidoConsulta, gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 6;
-        formPanel.add(txtApMaternoConsulta, gbc);
+        formPanel.add(txtSegundoApellidoConsulta, gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 7;
-        formPanel.add(spinnerSemestreConsulta, gbc);
+        formPanel.add(spinnerSemestreConsultaCampo, gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 8;
         formPanel.add(comboCarreraConsulta, gbc);
 
-        JButton btnBuscar = new JButton("BUSCAR");
+        btnBuscar = new JButton("BUSCAR");
         JButton btnBorrar = new JButton("BORRAR");
         JButton btnCancelar = new JButton("CANCELAR");
 
-        gbc.gridx = 2;
-        gbc.gridy = 4;
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 1;
         formPanel.add(btnBuscar, gbc);
 
-        gbc.gridx = 2;
-        gbc.gridy = 5;
+        gbc.gridx = 1;
+        gbc.gridy = 9;
         formPanel.add(btnBorrar, gbc);
 
         gbc.gridx = 2;
-        gbc.gridy = 6;
+        gbc.gridy = 9;
         formPanel.add(btnCancelar, gbc);
 
         // Crear la tabla para Consultas
@@ -762,203 +776,243 @@ public class SistemaAlumnos extends JFrame {
         tablaConsultas = new JTable(tableModelConsultas);
         JScrollPane scrollPane = new JScrollPane(tablaConsultas);
 
-        // Agregar a lo principal
-        panel.add(formPanel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        // Panel para la navegación
+        navegacionPanelConsultas = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        btnPrimero = new JButton("|<");
+        btnAnterior = new JButton("<");
+        txtIndice = new JTextField("0", 3);
+        txtIndice.setHorizontalAlignment(SwingConstants.CENTER);
+        txtIndice.setEditable(false);
+        btnSiguiente = new JButton(">");
+        btnUltimo = new JButton(">|");
+        listaConsultaResultados = new ArrayList<>();
 
+        navegacionPanelConsultas.add(btnPrimero);
+        navegacionPanelConsultas.add(btnAnterior);
+        navegacionPanelConsultas.add(txtIndice);
+        navegacionPanelConsultas.add(btnSiguiente);
+        navegacionPanelConsultas.add(btnUltimo);
+        navegacionPanelConsultas.setVisible(false);
+
+        // Agregar a lo principal
+        panelConsultas.add(formPanel, BorderLayout.NORTH);
+        panelConsultas.add(scrollPane, BorderLayout.CENTER);
+        panelConsultas.add(navegacionPanelConsultas, BorderLayout.SOUTH);
+
+        // Agregar listeners
         ActionListener radioListener = e -> {
-            txtNumControlConsulta.setEnabled(rbNumControl.isSelected());
-            txtNombreConsulta.setEnabled(rbNombre.isSelected());
-            txtApPaternoConsulta.setEnabled(rbApPaterno.isSelected());
-            txtApMaternoConsulta.setEnabled(rbApMaterno.isSelected());
-            spinnerSemestreConsulta.setEnabled(rbSemestre.isSelected());
-            comboCarreraConsulta.setEnabled(rbCarrera.isSelected());
+            txtNumeroControlConsulta.setEnabled(((JRadioButton) e.getSource()).getText().equals("NÚMERO DE CONTROL"));
+            txtNombreConsulta.setEnabled(((JRadioButton) e.getSource()).getText().equals("NOMBRE"));
+            txtPrimerApellidoConsulta.setEnabled(((JRadioButton) e.getSource()).getText().equals("APELLIDO PATERNO"));
+            txtSegundoApellidoConsulta.setEnabled(((JRadioButton) e.getSource()).getText().equals("APELLIDO MATERNO"));
+            spinnerSemestreConsultaCampo.setEnabled(((JRadioButton) e.getSource()).getText().equals("SEMESTRE"));
+            comboCarreraConsulta.setEnabled(((JRadioButton) e.getSource()).getText().equals("CARRERA"));
+            limpiarCamposConsulta();
         };
 
-        rbTodos.addActionListener(radioListener);
-        rbNumControl.addActionListener(radioListener);
-        rbNombre.addActionListener(radioListener);
-        rbApPaterno.addActionListener(radioListener);
-        rbApMaterno.addActionListener(radioListener);
-        rbSemestre.addActionListener(radioListener);
-        rbCarrera.addActionListener(radioListener);
+        for (Component c : formPanel.getComponents()) {
+            if (c instanceof JRadioButton) {
+                ((JRadioButton) c).addActionListener(radioListener);
+            }//if
+        }//for
 
         // que todos los botones de ruedita se deshabiliten a excepción del de "TODOS"
-        txtNumControlConsulta.setEnabled(false);
+        txtNumeroControlConsulta.setEnabled(false);
         txtNombreConsulta.setEnabled(false);
-        txtApPaternoConsulta.setEnabled(false);
-        txtApMaternoConsulta.setEnabled(false);
-        spinnerSemestreConsulta.setEnabled(false);
+        txtPrimerApellidoConsulta.setEnabled(false);
+        txtSegundoApellidoConsulta.setEnabled(false);
+        spinnerSemestreConsultaCampo.setEnabled(false);
         comboCarreraConsulta.setEnabled(false);
 
-        // Botón buscar
-        btnBuscar.addActionListener(e -> {
-            tableModelConsultas.setRowCount(0);
-
-            if (rbTodos.isSelected()) {
-                // mostrar todos los registros de la tabla de Altas
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    tableModelConsultas.addRow(new Object[]{
-                            tableModelAltas.getValueAt(i, 0),
-                            tableModelAltas.getValueAt(i, 1),
-                            tableModelAltas.getValueAt(i, 2),
-                            tableModelAltas.getValueAt(i, 3),
-                            tableModelAltas.getValueAt(i, 4),
-                            tableModelAltas.getValueAt(i, 5)
-                    });
-                } // for
-            } // if
-
-            else if (rbNumControl.isSelected()) {
-                String numControl = txtNumControlConsulta.getText().trim();
-                if (numControl.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Por favor, ingresa un número de control"); //que el numero de control sea lo que si o si deba agregar
-                    return;
-                } // if
-
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    if (tableModelAltas.getValueAt(i, 0).toString().equalsIgnoreCase(numControl)) {
-                        tableModelConsultas.addRow(new Object[]{
-                                tableModelAltas.getValueAt(i, 0),
-                                tableModelAltas.getValueAt(i, 1),
-                                tableModelAltas.getValueAt(i, 2),
-                                tableModelAltas.getValueAt(i, 3),
-                                tableModelAltas.getValueAt(i, 4),
-                                tableModelAltas.getValueAt(i, 5)
-                        });
-                    } // if
-                } // for
-            } // if
-
-            else if (rbNombre.isSelected()) {
-                String nombre = txtNombreConsulta.getText().trim();
-                if (nombre.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Por favor, ingresa un nombre");
-                    return;
-                } // if
-
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    if (tableModelAltas.getValueAt(i, 1).toString().equalsIgnoreCase(nombre)) {
-                        tableModelConsultas.addRow(new Object[]{
-                                tableModelAltas.getValueAt(i, 0),
-                                tableModelAltas.getValueAt(i, 1),
-                                tableModelAltas.getValueAt(i, 2),
-                                tableModelAltas.getValueAt(i, 3),
-                                tableModelAltas.getValueAt(i, 4),
-                                tableModelAltas.getValueAt(i, 5)
-                        });
-                    } // if
-                } // for
-            } // if
-
-            else if (rbApPaterno.isSelected()) {
-                String apPaterno = txtApPaternoConsulta.getText().trim();
-                if (apPaterno.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Por favor, ingresa un primer apellido");
-                    return;
-                } // if
-
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    if (tableModelAltas.getValueAt(i, 2).toString().equalsIgnoreCase(apPaterno)) {
-                        tableModelConsultas.addRow(new Object[]{
-                                tableModelAltas.getValueAt(i, 0),
-                                tableModelAltas.getValueAt(i, 1),
-                                tableModelAltas.getValueAt(i, 2),
-                                tableModelAltas.getValueAt(i, 3),
-                                tableModelAltas.getValueAt(i, 4),
-                                tableModelAltas.getValueAt(i, 5)
-                        });
-                    } // if
-                } // for
-            } // if
-
-            else if (rbApMaterno.isSelected()) {
-                String apMaterno = txtApMaternoConsulta.getText().trim();
-                if (apMaterno.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Por favor, ingresa un segundo apellido");
-                    return;
-                } // if
-
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    if (tableModelAltas.getValueAt(i, 3).toString().equalsIgnoreCase(apMaterno)) {
-                        tableModelConsultas.addRow(new Object[]{
-                                tableModelAltas.getValueAt(i, 0),
-                                tableModelAltas.getValueAt(i, 1),
-                                tableModelAltas.getValueAt(i, 2),
-                                tableModelAltas.getValueAt(i, 3),
-                                tableModelAltas.getValueAt(i, 4),
-                                tableModelAltas.getValueAt(i, 5)
-                        });
-                    } // if
-                } // for
-            } // if
-
-            else if (rbSemestre.isSelected()) {
-                String semestre = spinnerSemestreConsulta.getValue().toString();
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    if (tableModelAltas.getValueAt(i, 4).toString().equals(semestre)) {
-                        tableModelConsultas.addRow(new Object[]{
-                                tableModelAltas.getValueAt(i, 0),
-                                tableModelAltas.getValueAt(i, 1),
-                                tableModelAltas.getValueAt(i, 2),
-                                tableModelAltas.getValueAt(i, 3),
-                                tableModelAltas.getValueAt(i, 4),
-                                tableModelAltas.getValueAt(i, 5)
-                        });
-                    } // if
-                } // for
-            } // if
-
-            else if (rbCarrera.isSelected()) {
-                String carrera = (String) comboCarreraConsulta.getSelectedItem();
-                if (carrera == null || carrera.equals("Elige Carrera...")) { //por si pone esta opcion no la acepte, porque teoricamente no es valida
-                    JOptionPane.showMessageDialog(null, "Por favor, selecciona una carrera válida");
-                    return;
-                } // if
-
-                boolean hayRegistros = false;
-                for (int i = 0; i < tableModelAltas.getRowCount(); i++) {
-                    if (tableModelAltas.getValueAt(i, 5).toString().equalsIgnoreCase(carrera)) {
-                        tableModelConsultas.addRow(new Object[]{
-                                tableModelAltas.getValueAt(i, 0),
-                                tableModelAltas.getValueAt(i, 1),
-                                tableModelAltas.getValueAt(i, 2),
-                                tableModelAltas.getValueAt(i, 3),
-                                tableModelAltas.getValueAt(i, 4),
-                                tableModelAltas.getValueAt(i, 5)
-                        });
-                        hayRegistros = true;
-                    } // if
-                } // for
-
-                //verificar registros en la carrera
-                if (!hayRegistros) {
-                    JOptionPane.showMessageDialog(null, "No se encontraron alumnos en la carrera: " + carrera);
-                } // if
-            } // if
-
-            if (tableModelConsultas.getRowCount() == 0 && !rbCarrera.isSelected()) {
-                JOptionPane.showMessageDialog(null, "No se encontraron resultados que coincidan con eso");
-            } // if
+        btnBuscar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listaConsultaResultados = buscarAlumnos();
+                actualizarTablaConsultas();
+                actualizarNavegacionConsultas();
+                navegacionPanelConsultas.setVisible(listaConsultaResultados.size() > 0);
+            }//ActionPerformed
         });
 
-        // Botón borrar
-        btnBorrar.addActionListener(e -> {
-            txtNumControlConsulta.setText("");
-            txtNombreConsulta.setText("");
-            txtApPaternoConsulta.setText("");
-            txtApMaternoConsulta.setText("");
-            spinnerSemestreConsulta.setValue(1);
-            comboCarreraConsulta.setSelectedIndex(0);
-            tableModelConsultas.setRowCount(0);
+        btnBorrar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                limpiarCamposConsulta();
+                tableModelConsultas.setRowCount(0);
+                navegacionPanelConsultas.setVisible(false);
+                listaConsultaResultados.clear();
+                indiceActual = 0;
+            }//ActionPerformed
         });
 
-        // Cancelar -> mandar al menú principal
-        btnCancelar.addActionListener(e -> cardLayout.show(mainPanel, "Menu"));
+        btnCancelar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(mainPanel, "Menu");
+            }//actionPerfomres
+        });
 
-        return panel;
-    } // crearPanelConsultas
-    
+        btnPrimero.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (listaConsultaResultados.size() > 0) {
+                    indiceActual = 0;
+                    actualizarNavegacionConsultas();
+                    mostrarRegistroActual();
+                }//if
+            }//ActionPerformed
+        });
+
+        btnAnterior.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (indiceActual > 0) {
+                    indiceActual--;
+                    actualizarNavegacionConsultas();
+                    mostrarRegistroActual();
+                }//if
+            }//actionPerdormed
+        });
+
+        btnSiguiente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (indiceActual < listaConsultaResultados.size() - 1) {
+                    indiceActual++;
+                    actualizarNavegacionConsultas();
+                    mostrarRegistroActual();
+                }//if
+            }//actionPerformed
+        });
+
+        btnUltimo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (listaConsultaResultados.size() > 0) {
+                    indiceActual = listaConsultaResultados.size() - 1;
+                    actualizarNavegacionConsultas();
+                    mostrarRegistroActual();
+                }//if
+            }//actionPerformed
+        });
+
+        return panelConsultas;
+    }//crearPanelConsultas
+
+    private void limpiarCamposConsulta() {
+        txtNumeroControlConsulta.setText("");
+        txtNombreConsulta.setText("");
+        txtPrimerApellidoConsulta.setText("");
+        txtSegundoApellidoConsulta.setText("");
+        if (spinnerSemestreConsultaCampo != null) {
+            spinnerSemestreConsultaCampo.setValue(1);
+        }//of
+        comboCarreraConsulta.setSelectedIndex(0);
+    }//limpiarCamposConsulta
+
+    //de acuerdo a lo selecionado, muetsra los datos
+    private List<Alumno> buscarAlumnos() {
+        List<Alumno> resultados = new ArrayList<>();
+        String criterio = "";
+        String valor = "";
+
+        if (panelConsultas != null) {
+            Component[] components = ((JPanel) panelConsultas.getComponent(0)).getComponents();
+            for (Component component : components) {
+                if (component instanceof JRadioButton) {
+                    JRadioButton radioButton = (JRadioButton) component;
+                    if (radioButton.isSelected()) {
+                        criterio = radioButton.getText();
+                        break;
+                    }//if adentro1
+                }//if afuera 1
+            }//for
+
+            switch (criterio) {
+                case "TODOS":
+                    resultados = alumnoDAO.mostrarAlumnos(null);
+                    break;
+                case "NÚMERO DE CONTROL":
+                    valor = txtNumeroControlConsulta.getText().trim();
+                    resultados = alumnoDAO.buscarAlumnos("numControl", valor);
+                    break;
+                case "NOMBRE":
+                    valor = txtNombreConsulta.getText().trim();
+                    resultados = alumnoDAO.buscarAlumnos("nombre", valor);
+                    break;
+                case "APELLIDO PATERNO":
+                    valor = txtPrimerApellidoConsulta.getText().trim();
+                    resultados = alumnoDAO.buscarAlumnos("primerAp", valor);
+                    break;
+                case "APELLIDO MATERNO":
+                    valor = txtSegundoApellidoConsulta.getText().trim();
+                    resultados = alumnoDAO.buscarAlumnos("segundoAp", valor);
+                    break;
+                case "SEMESTRE":
+                    valor = String.valueOf(((Number) spinnerSemestreConsultaCampo.getValue()).byteValue());
+                    resultados = alumnoDAO.buscarAlumnos("semestre", valor);
+                    break;
+                case "CARRERA":
+                    valor = (String) comboCarreraConsulta.getSelectedItem();
+                    if (valor != null && !valor.equals("Elige Carrera...")) {
+                        resultados = alumnoDAO.buscarAlumnos("carrera", valor);
+                    }//if
+                    break;
+                default:
+                    resultados = new ArrayList<>();
+            }//switcj
+        }//if
+        return resultados;
+    }//bucarAlumnos
+
+    private void actualizarTablaConsultas() {
+        tableModelConsultas.setRowCount(0);
+        if (listaConsultaResultados != null && !listaConsultaResultados.isEmpty()) {
+            for (Alumno alumno : listaConsultaResultados) {
+                tableModelConsultas.addRow(new Object[]{
+                        alumno.getNumControl(),
+                        alumno.getNombre(),
+                        alumno.getPrimerAp(),
+                        alumno.getSegundoAp(),
+                        alumno.getSemestre(),
+                        alumno.getCarrera()
+                });
+            }//for
+        }//if
+    }//actualizarTablaConsultas
+
+    private void actualizarNavegacionConsultas() {
+        if (listaConsultaResultados.size() > 0) { //que no este vacia
+            txtIndice.setText((indiceActual + 1) + " de " + listaConsultaResultados.size());
+            btnPrimero.setEnabled(indiceActual > 0);
+            btnAnterior.setEnabled(indiceActual > 0);
+            btnSiguiente.setEnabled(indiceActual < listaConsultaResultados.size() - 1);
+            btnUltimo.setEnabled(indiceActual < listaConsultaResultados.size() - 1);
+        } else {
+            txtIndice.setText("0 de 0"); //si esta vacia que muestre 0 de 0 (obvi)
+            btnPrimero.setEnabled(false);
+            btnAnterior.setEnabled(false);
+            btnSiguiente.setEnabled(false);
+            btnUltimo.setEnabled(false);
+        }//if-else
+    }//actualizarNavegacionConsultas
+
+    private void mostrarRegistroActual() {
+        tableModelConsultas.setRowCount(0); // limpia la tablita
+        if (listaConsultaResultados.size() > 0) {
+            Alumno alumno = listaConsultaResultados.get(indiceActual);
+            tableModelConsultas.addRow(new Object[]{
+                    alumno.getNumControl(),
+                    alumno.getNombre(),
+                    alumno.getPrimerAp(),
+                    alumno.getSegundoAp(),
+                    alumno.getSemestre(),
+                    alumno.getCarrera()
+            });
+        }//if
+
+    }//mostrarRegistroActual
+
     //==================================================================================================================================================================================================================================
 
     public static void main(String[] args) {

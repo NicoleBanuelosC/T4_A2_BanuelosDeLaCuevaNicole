@@ -5,6 +5,7 @@ import modelo.Alumno; //clase que representa un alumno
 import java.sql.ResultSet; //manejar resultados de consulta
 import java.sql.SQLException; //excepciones SQL
 import java.util.ArrayList;
+import java.util.List; //Importar la List
 
 //DAO - Data Access Object
 public class AlumnoDAO {
@@ -100,6 +101,33 @@ public class AlumnoDAO {
         return listaAlumnos;
     }//mostrarAlumno
 
+//===========================================================================================================================================================================================
+
+//Buscar Alumnos
+public List<Alumno> buscarAlumnos(String columna, String valor) {
+    List<Alumno> listaAlumnos = new ArrayList<>();
+    String sql = "SELECT * FROM alumnos WHERE " + columna + " = '" + valor + "'";
+    ResultSet rs = conexionBD.ejecutarInstruccionSQL(sql);
+
+    try {
+        if (rs != null) {
+            while (rs.next()) {
+                String nc = rs.getString("Num_Control");
+                String n = rs.getString("Nombre");
+                String pa = rs.getString("Primer_Ap");
+                String sa = rs.getString("Segundo_Ap");
+                byte e = rs.getByte("Edad");
+                byte s = rs.getByte("Semestre");
+                String c = rs.getString("Carrera");
+                Alumno alumno = new Alumno(nc, n, pa, sa, e, s, c);
+                listaAlumnos.add(alumno);
+            }
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return listaAlumnos;
+}
 //===========================================================================================================================================================================================
 
 }//public clas
